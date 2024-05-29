@@ -1,12 +1,16 @@
 //         °.° 
+//         https://www.geeks3d.com/20110405/fxaa-fast-approximate-anti-aliasing-demo-glsl-opengl-test-radeon-geforce/
 
 log = console.log
 sin = Math.sin
 ssin = x => 0.5*sin(x) + 0.5
 
 var canvas = document.createElement('canvas');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+const size = Math.max(window.innerWidth, window.innerHeight)
+// canvas.width = size;
+// canvas.height = size;
+canvas.width = 3000;
+canvas.height = 3000;
 document.body.appendChild(canvas);
 
 
@@ -38,7 +42,8 @@ function make_Ms(poses) {
 
 //     let Ms = new Float32Array(16*2*poses.length)
 
-    const s = 0.0115;
+    // scale
+    const s = 0.0045;
     tmpMs = []
     for (let p of poses) {
         let M = [
@@ -60,7 +65,12 @@ function make_Ms(poses) {
 // log(frag)
 
 gl.enable(gl.BLEND);
-gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+gl.blendEquation(gl.MAX);
+// gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+// gl.blendFunc(gl.ZERO, gl.ONE);
+// gl.blendFunc(gl.SRC_ALPHA, gl.ZERO);
+// gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+// gl.blendFunc(gl.ONE, gl.ONE);
 
 var program = createProgram(gl, vert, frag);
 
@@ -71,12 +81,12 @@ var vertexPosBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, vertexPosBuffer);
 
 var vertices = new Float32Array([
-   -1.5, -1.0 ,
-    1.5, -1.0 ,
-   -1.5,  1.0 ,
-   -1.5,  1.0 ,
-    1.5, -1.0 ,
-    1.5,  1.0 ,
+   -1.0, -1.0 ,
+    1.0, -1.0 ,
+   -1.0,  1.0 ,
+   -1.0,  1.0 ,
+    1.0, -1.0 ,
+    1.0,  1.0 ,
 ]);
 
 gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
@@ -159,7 +169,6 @@ function render_line(A, B) {
 //     gl.clearColor(0,1,1,1);
 //     gl.clear(gl.COLOR_BUFFER_BIT);
 
-
     poses = line(...A, ...B, _N-1)
 //     log('poses', poses)
     Ms = make_Ms(poses)
@@ -178,10 +187,12 @@ function render_line(A, B) {
     gl.bindBufferBase(gl.UNIFORM_BUFFER, 1, uniformMaterialBuffer);
 
     // first render pass 
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fb_render);
+//     gl.bindFramebuffer(gl.FRAMEBUFFER, fb_render);
+//     gl.bindFramebuffer(gl.FRAMEBUFFER, fb_color);
     gl.useProgram(program);
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, _N);
 
+  /*
     // Blit framebuffers before second pass
     gl.bindFramebuffer(gl.READ_FRAMEBUFFER, fb_render)
     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, fb_color)
@@ -202,6 +213,7 @@ function render_line(A, B) {
     gl.bindTexture(gl.TEXTURE_2D, render_texture);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.bindTexture(gl.TEXTURE_2D, null);
+    */
 
 }
 

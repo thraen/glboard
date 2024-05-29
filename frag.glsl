@@ -20,12 +20,31 @@ void main()
 //     color = material.color[instance ];
 //     color = vec4(gl_FragCoord.xy, 0, 1);
 //     color = vec4(uv , 0, 1);
+
     float l = length(uv);
+    float a = 1.0;
+//     if (l > 1.0) 
+//       a = mix(1.0, 0.0, 3.1*(l-a));
+
+//     a = max(0.0,  mix(1.0, 0.0, 3.1*(l-a)));
+//
+    a =  mix(1.0, 0.0, 3.1*(l-a));
+//       a = mix(1.0, 0.0, 100.01*(l-a) * (l-a));
+
+//         a = 1.0-step(1.0, l);
     color = vec4(
-        0,
-        0,
-        0,
-        1.0-step(1.0, l));
+        0.0,
+        0.0,
+        0.0,
+        a
+//         1
+//         smoothstep(1.0, 0.0, l*l*l*l*l*l*l*l*l*l*l*l)
+//         1.0-smoothstep(0.0, 1.0, pow(l,3.1))
+//         1.0-step(1.0, l)
+//         1.0
+        );
+
+
 
 //     float l_ = l;
 //     l_ = (l_*l_*l_*l_);
@@ -55,7 +74,7 @@ void main()
 //         0,
 //         1.0-step(1.0, l));
 //       color = vec4(0.0, 1.0, 1.0, 1.0);
-      color = texture(uSampler, 0.5*uv + vec2(0.5, 0.5) );
+      color = texture(uSampler, 0.5*uv + vec2(0.5, 0.5));
 
 //       float c = 0.0001;
 //       color = 

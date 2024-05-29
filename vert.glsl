@@ -21,7 +21,7 @@ void main()
 {
     instance = gl_InstanceID;
     gl_Position = transform.MVP[gl_InstanceID] * vec4(pos, 0.0, 1.0);
-    uv = pos;
+    uv = 2.0*pos;
 }
 `;
 
