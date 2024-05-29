@@ -1,0 +1,39 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    -webkit-user-modify: none !important;
+    -webkit-user-drag: none !important;
+}
+
+canvas {
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    display: block;
+    background-color: #ffffff;
+    border: 1px solid #000000;
+}
+
+#user-id-display {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.toolbar {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+}
