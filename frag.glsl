@@ -23,10 +23,6 @@ void main()
 
     float l = length(uv);
     float a = 1.0;
-//     if (l > 1.0) 
-//       a = mix(1.0, 0.0, 3.1*(l-a));
-
-//     a = max(0.0,  mix(1.0, 0.0, 3.1*(l-a)));
 //
     a =  mix(1.0, 0.0, 3.1*(l-a));
 //       a = mix(1.0, 0.0, 100.01*(l-a) * (l-a));
