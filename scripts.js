@@ -14,6 +14,7 @@ canvas.width = 3000;
 canvas.height = 3000;
 document.body.appendChild(canvas);
 
+//bla
 
 var gl = canvas.getContext('webgl2', { 
                                        preserveDrawingBuffer: true,
