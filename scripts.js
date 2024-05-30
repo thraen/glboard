@@ -7,7 +7,7 @@ ssin = x => 0.5*sin(x) + 0.5
 
 // var canvas = document.createElement('canvas');
 var canvas = document.getElementById('canvas');
-const size = Math.max(window.innerWidth, window.innerHeight)
+// const size = Math.max(window.innerWidth, window.innerHeight)
 // canvas.width = size;
 // canvas.height = size;
 canvas.width = 3000;
