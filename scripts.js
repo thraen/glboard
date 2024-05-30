@@ -58,7 +58,6 @@ function make_Ms(poses) {
         tmpMs.push(M)
     }
 //     log(tmpMs)
-//     log(tmpMs.flat())
     return new Float32Array(tmpMs.flat())
 }
 
@@ -113,8 +112,6 @@ gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,
 // set the filtering so we don't need mips
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 gl.bindTexture(gl.TEXTURE_2D, null);
 
 
@@ -145,19 +142,6 @@ function make_materials(n) {
     for (i=0; i<n; i++) {
         tmp.push( [1-(i/n), ssin(milli) , (i /n), 1.0] )
     }
-
-    // return new Float32Array([
-    //     0.0, 0.1, 0.0, 1.0,
-    //     0.0, 0.2, 0.0, 1.0,
-    //     0.0, 0.3, 0.0, 1.0,
-    //     0.0, 0.4, 0.0, 1.0,
-    //     0.0, 0.5, 0.0, 1.0,
-    //     0.0, 0.6, 0.0, 1.0,
-    //     0.0, 0.7, 0.0, 1.0,
-    //     0.0, 0.8, 0.0, 1.0,
-    //     0.0, 0.9, 0.0, 1.0,
-    //     0.0, 1.0, 1.0, 1.0
-    // ]);
     return new Float32Array(tmp.flat())
 }
 
