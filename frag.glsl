@@ -63,13 +63,6 @@ in vec2 uv;
 
 void main()
 {
-//     float l = length(uv);
-//     color = vec4(
-//         0,
-//         0,
-//         0,
-//         1.0-step(1.0, l));
-//       color = vec4(0.0, 1.0, 1.0, 1.0);
       color = texture(uSampler, 0.5*uv + vec2(0.5, 0.5));
 
 //       float c = 0.0001;
