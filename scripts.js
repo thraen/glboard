@@ -1,9 +1,10 @@
 //         °.° 
 //         https://www.geeks3d.com/20110405/fxaa-fast-approximate-anti-aliasing-demo-glsl-opengl-test-radeon-geforce/
 
-log = console.log
-sin = Math.sin
-ssin = x => 0.5*sin(x) + 0.5
+let log = console.log
+let sin = Math.sin
+let cos = Math.sin
+let ssin = x => 0.5*sin(x) + 0.5
 
 // var canvas = document.createElement('canvas');
 var canvas = document.getElementById('canvas');
@@ -26,26 +27,14 @@ if(!isWebGL2) {
     document.getElementById('info').innerHTML = 'WebGL 2 is not available.  See <a href="https://www.khronos.org/webgl/wiki/Getting_a_WebGL_Implementation">How to get a WebGL 2 implementation</a>';
 }
 
-function line(x, y, bx, by, n) {
-    dx = (bx - x) * (1/n)
-    dy = (by - y) * (1/n)
 
-    poses = [[x,y]]
-    for (i=1; i<=n; i++) {
-        x += dx
-        y += dy
-        poses[i] = [x,y]
-    }
-    return poses
-}
-
-function make_Ms(poses) {
+function make_Ms(poses, scale) {
     n = poses.length
 
-//     let Ms = new Float32Array(16*2*poses.length)
+//     let transforms = new Float32Array(16*2*poses.length)
 
     // scale
-    const s = 0.0045;
+    const s = scale
     tmpMs = []
     for (let p of poses) {
         let M = [
@@ -149,21 +138,17 @@ var vertexPosLocation = 0; // set with GLSL layout qualifier
 gl.enableVertexAttribArray(vertexPosLocation);
 gl.vertexAttribPointer(vertexPosLocation, 2, gl.FLOAT, false, 0, 0);
 
-function render_line(A, B) {
+function render_line(transforms, materials, n) {
 
     // -- Render
 //     gl.clearColor(0,1,1,1);
 //     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    poses = line(...A, ...B, _N-1)
-//     log('poses', poses)
-    Ms = make_Ms(poses)
 
     gl.bindBuffer(gl.UNIFORM_BUFFER, uniformTransformBuffer);
-    gl.bufferData(gl.UNIFORM_BUFFER, Ms, gl.DYNAMIC_DRAW);
+    gl.bufferData(gl.UNIFORM_BUFFER, transforms, gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.UNIFORM_BUFFER, null);
 
-    var materials = make_materials(_N)
 //     log('materials', materials)
     gl.bindBuffer(gl.UNIFORM_BUFFER, uniformMaterialBuffer);
     gl.bufferData(gl.UNIFORM_BUFFER, materials, gl.STATIC_DRAW);
@@ -176,7 +161,7 @@ function render_line(A, B) {
 //     gl.bindFramebuffer(gl.FRAMEBUFFER, fb_render);
 //     gl.bindFramebuffer(gl.FRAMEBUFFER, fb_color);
     gl.useProgram(program);
-    gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, _N);
+    gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, n);
 
   /*
     // Blit framebuffers before second pass
@@ -203,7 +188,6 @@ function render_line(A, B) {
 
 }
 
-var drawing = false
 
 function glkoord(winx, winy) {
 //     w = canvas.clientWidth
@@ -213,28 +197,70 @@ function glkoord(winx, winy) {
     return [ (winx - wh) / wh, (hh-winy) / hh ]
 }
 
+let drawing = []
+// let lastp = [0, 0]
+
 function on_pointerdown(e) {
     e.preventDefault();
-    drawing = true
     lastp = glkoord( e.offsetX, e.offsetY )
+    drawing = [lastp]
+    log('pointerdown', lastp)
 }
 
 function on_pointerup(e) {
     e.preventDefault();
-    drawing = false
+    drawing = []
 }
 
 function on_pointermove(e) {
     e.preventDefault();
-    if (!drawing) return;
+    if (drawing.length == 0) return;
 
-    P = glkoord( e.offsetX, e.offsetY)
+    const lastp = drawing[drawing.length-1]
 
-    render_line(P, lastp)
-    lastp = P
+    const p = glkoord( e.offsetX, e.offsetY)
+    drawing.push(p)
+//     var poses
+
+    if (drawing.length >= 4) {
+//         const tail = drawing.splice(-4)
+        
+        /// L -- A -- B -- N
+
+//         /// tangentenpunkte an A
+        const L = drawing[drawing.length-1]
+        const A = drawing[drawing.length-2]
+        const B = drawing[drawing.length-3]
+        const N = drawing[drawing.length-4]
+
+        /// Tb ist der Tangentenpunkt vom letzten B
+//         Ta = mirror(A, Tb) // fuck mirror ist besser
+
+        const [Ta_, Ta]  = tangentenpunkte(...L, ...A, ...B)
+        const [Tb_, Tb]  = tangentenpunkte(...A, ...B, ...N)
+//         log('bbbbbbbzzzz', A, B)
+        var poses = sample_bezier(...A, ...Ta, ...Tb_, ...B, _N-1)
+
+//         let poses = sample_line(...A, ...B, _N-1)
+
+        renderfu(poses)
+
+//         log('A', A, 'Ta_', Ta_, 'Ta', Ta)
+//         poses = sample_line(...Ta_, ...Ta, _N-1)
+    } 
+    else{
+        const poses = sample_line(...lastp, ...p, _N-1)
+
+        renderfu(poses)
+    }
+
 }
 
-// render_line([0, 0], [-0,1])
+function renderfu(poses) {
+    let transforms = make_Ms(poses, 0.0045)
+    let materials = make_materials(poses.length)
+    render_line(transforms, materials, poses.length)
+}
 
 canvas.addEventListener("pointermove", on_pointermove, {/*passive: true,*/ capture:true})
 canvas.addEventListener("pointerdown", on_pointerdown, {/*passive: true,*/ capture:true})
@@ -252,4 +278,47 @@ document.addEventListener('touchend', (e) => {e.preventDefault()})
 // gl.deleteProgram(program);
 
 
+// var tcx = canvas.width/3
+// var tcy = canvas.height/3
 
+var tcx = -0.10
+var tcy = -0.10
+
+// var tr = canvas.width/5
+// var testx = tcx + cos( 0) * tr
+// var testy = tcy + sin( 0) * tr
+// on_pointerdown({offsetX: testx , offsetY:testy , preventDefault:()=>{}})
+// for (let i = 1; i< 100; i++) {
+//     testx = tcx + cos( i*0.0010) * tr
+//     testy = tcy + sin( i*0.0010) * tr
+//     on_pointermove({offsetX: testx, offsetY: testy, preventDefault:()=>{}})
+// }
+// on_pointerup(  {offsetX: testx + 10.04, offsetY:testy + 10.04, preventDefault:()=>{}})
+
+let L = [-0.8, 0.8]
+let A = [-0.6, 0.6]
+let B = [-0.4, 0.8]
+let N = [-0.6, 1.0]
+let poses = sample_line(...L, ...A, _N-1)
+renderfu(poses)
+
+rline(L, A)
+rline(A, B)
+rline(B, N)
+
+const [Ta_, Ta]  = tangentenpunkte(...L, ...A, ...B)
+const [Tb_, Tb]  = tangentenpunkte(...A, ...B, ...N)
+
+rline(Ta_, A)
+rline(Ta,  A)
+
+rline(Tb_, B)
+rline(Tb,  B)
+
+function rline(A, B) {
+    var poses = sample_line(...A, ...B, _N-1)
+    renderfu(poses)
+}
+
+poses = sample_bezier(...A, ...Ta, ...Tb_, ...B, _N-1)
+renderfu(poses)

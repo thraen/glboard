@@ -1,5 +1,4 @@
-window.frag = `
-#version 300 es
+window.frag = `#version 300 es
 precision highp float;
 precision highp int;
 layout(std140) uniform;
@@ -29,7 +28,8 @@ void main()
 
 //         a = 1.0-step(1.0, l);
     color = vec4(
-        0.0,
+        material.color[instance].y,
+//         0.0,
         0.0,
         0.0,
         a
