@@ -2,6 +2,18 @@
 /// https://en.wikipedia.org/wiki/B%C3%A9zier_curve
 /// https://en.wikipedia.org/wiki/Composite_B%C3%A9zier_curve
 
+function dist(ax, ay, bx, by) {
+    return sqrt( (ax-bx) * (ax-bx) + (ay-by) * (ay-by) )
+}
+
+function dist2(ax, ay, bx, by) {
+    return (ax-bx) * (ax-bx) + (ay-by) * (ay-by)
+}
+
+
+let dot  = (ax, ay, bx, by) => ax*bx + ax*by
+let diff = (ax, ay, bx, by) => [ax-bx, ay-by]
+
 /// cubic bezier curve from P0 to P3 with control points p1, p2
 function bezier(p0x, p0y , p1x, p1y , p2x, p2y, p3x, p3y, t) {
 //     B(t) = (1-t)^3 * P0 + 3*(1-t)^2 *t* P1 + 3*(1-t) *t^2 *P2 + t^3 *P3
@@ -11,7 +23,7 @@ function bezier(p0x, p0y , p1x, p1y , p2x, p2y, p3x, p3y, t) {
     return [Bx, By]
 }
 
-function tangentenpunkte(Lx, Ly, Ox, Oy, Nx, Ny) {
+function tangentenpunkte(Lx, Ly, Ox, Oy, Nx, Ny, c) {
     let Lx_ = 2*Ox - Lx
     let Ly_ = 2*Oy - Ly
     
@@ -22,20 +34,23 @@ function tangentenpunkte(Lx, Ly, Ox, Oy, Nx, Ny) {
     let CLy = Ly + 0.5* (Ny_ - Ly)
 
   // fuck klammer aufloesen !
-  const c = 0.2
-    let CLxc = (CLx - Ox)* c + Ox
-    let CLyc = (CLy - Oy)* c + Oy
+//   const c = 0.2
+    let n = dist(CLx, CLy, Ox, Oy)
+    
+    let CLxc = (1/n)*(CLx - Ox)* c + Ox
+    let CLyc = (1/n)*(CLy - Oy)* c + Oy
     
 
     let CNx = Nx + 0.5* (Lx_ - Nx)
     let CNy = Ny + 0.5* (Ly_ - Ny)
 
-    let CNxc = (CNx - Ox)* c + Ox
-    let CNyc = (CNy - Oy)* c + Oy
+    n = dist(CNx, CNy, Ox, Oy)
+
+    let CNxc = (1/n)*(CNx - Ox)* c + Ox
+    let CNyc = (1/n)*(CNy - Oy)* c + Oy
 
 //     return [[CLx, CLy], [CNx, CNy]]
     return [[CLxc, CLyc], [CNxc, CNyc]]
-//     return [[CNxc, CNyc], [CLxc, CLyc]]
 }
 
 function sample_line(x, y, bx, by, n) {
@@ -53,7 +68,7 @@ function sample_line(x, y, bx, by, n) {
 
 function sample_bezier(p0x, p0y , p1x, p1y , p2x, p2y, p3x, p3y, n) {
 //     log('sample_bezier', p0x, p0y , p1x, p1y , p2x, p2y, p3x, p3y, n)
-    log('sample_bezier', [p0x, p0y] , [p3x, p3y], n)
+//     log('sample_bezier', [p0x, p0y] , [p3x, p3y], n)
     const dx = 1.0 / n
     let poses = []
     let t=0

@@ -28,10 +28,9 @@ void main()
 
 //         a = 1.0-step(1.0, l);
     color = vec4(
-        material.color[instance].y,
-//         0.0,
-        0.0,
-        0.0,
+        material.color[instance].r,
+        material.color[instance].g,
+        material.color[instance].b,
         a
 //         1
 //         smoothstep(1.0, 0.0, l*l*l*l*l*l*l*l*l*l*l*l)

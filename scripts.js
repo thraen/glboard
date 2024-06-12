@@ -3,8 +3,18 @@
 
 let log = console.log
 let sin = Math.sin
-let cos = Math.sin
+let cos = Math.cos
+let sqrt = Math.sqrt
+let asin = Math.asin
+let acos = Math.acos
+let atan = Math.atan
+let atan2 = Math.atan2
 let ssin = x => 0.5*sin(x) + 0.5
+
+const black = [0, 0, 0, 1]
+const green = [0, 1, 0, 1]
+const blue  = [0, 0, 1, 1]
+const red   = [1, 0, 0, 1]
 
 // var canvas = document.createElement('canvas');
 var canvas = document.getElementById('canvas');
@@ -29,7 +39,7 @@ if(!isWebGL2) {
 
 
 function make_Ms(poses, scale) {
-    n = poses.length
+    const n = poses.length
 
 //     let transforms = new Float32Array(16*2*poses.length)
 
@@ -125,11 +135,13 @@ gl.bindFramebuffer(gl.FRAMEBUFFER, null)
 // gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
 // gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, render_texture, 0);
 
-function make_materials(n) {
+function make_materials(n, rgba) {
     tmp = []
     let milli = Date.now() / 1000
+    const [r, b, g, a] = rgba
     for (i=0; i<n; i++) {
-        tmp.push( [1-(i/n), ssin(milli) , (i /n), 1.0] )
+        tmp.push( r, g, b, a )
+//         tmp.push( r, g + ssin(milli), b, a )
     }
     return new Float32Array(tmp.flat())
 }
@@ -208,26 +220,31 @@ function on_pointerdown(e) {
 }
 
 function on_pointerup(e) {
+    /// fuck finish teh stroke
     e.preventDefault();
     drawing = []
 }
 
+let evcount = 0
 function on_pointermove(e) {
     e.preventDefault();
     if (drawing.length == 0) return;
+
+    evcount+=1
+    if ( evcount%2 == 1 && e.pressure )
+        return
 
     const lastp = drawing[drawing.length-1]
 
     const p = glkoord( e.offsetX, e.offsetY)
     drawing.push(p)
-//     var poses
 
     if (drawing.length >= 4) {
-//         const tail = drawing.splice(-4)
-        
+        log('on_pointermove bez', drawing.length)
+
         /// L -- A -- B -- N
 
-//         /// tangentenpunkte an A
+        /// tangentenpunkte an A
         const L = drawing[drawing.length-1]
         const A = drawing[drawing.length-2]
         const B = drawing[drawing.length-3]
@@ -236,30 +253,55 @@ function on_pointermove(e) {
         /// Tb ist der Tangentenpunkt vom letzten B
 //         Ta = mirror(A, Tb) // fuck mirror ist besser
 
-        const [Ta_, Ta]  = tangentenpunkte(...L, ...A, ...B)
-        const [Tb_, Tb]  = tangentenpunkte(...A, ...B, ...N)
-//         log('bbbbbbbzzzz', A, B)
-        var poses = sample_bezier(...A, ...Ta, ...Tb_, ...B, _N-1)
+        const c = 0.3*dist(...A, ...B)
 
+//         const a2 = dist2(...L, ...A)
+//         const b2 = dist2(...B, ...A)
+//         const c2 = dist2(...L, ...B)
+//         const a = sqrt(a2)
+//         const b = sqrt(b2)
+//         const alpha = acos(( c2 - a2 - b2 )/ (2*a*b))
+
+
+//         const LA = diff(...L, ...A)
+//         const AB = diff(...B, ...A)
+//         const alpha =   atan2(AB[1], AB[0]) 
+//                       - atan2(LA[1], LA[0]);
+
+//         log('?', alpha)
+//         const alpha = acos(
+//         const c = 1000*dot(...La, ...AB)
+
+        const [Ta_, Ta]  = tangentenpunkte(...L, ...A, ...B, c)
+
+
+        const [Tb_, Tb]  = tangentenpunkte(...A, ...B, ...N, c)
+
+        let poses = sample_bezier(...A, ...Ta, ...Tb_, ...B, _N-1)
 //         let poses = sample_line(...A, ...B, _N-1)
+        renderfu(poses, 0.004)
 
-        renderfu(poses)
-
-//         log('A', A, 'Ta_', Ta_, 'Ta', Ta)
-//         poses = sample_line(...Ta_, ...Ta, _N-1)
+        rline(Ta, A, green)
+//         rline(Ta_,A, green)
     } 
     else{
-        const poses = sample_line(...lastp, ...p, _N-1)
-
-        renderfu(poses)
+        /// fuck this makes teh first line twice
+//         log('on_pointermove lin', drawing.length)
+//         const poses = sample_line(...lastp, ...p, _N-1)
+//         renderfu(poses, rgb)
     }
 
 }
 
-function renderfu(poses) {
-    let transforms = make_Ms(poses, 0.0045)
-    let materials = make_materials(poses.length)
+function renderfu(poses, width = 0.0045, rgba = [0, 0, 0, 1]) {
+    let transforms = make_Ms(poses, width)
+    let materials = make_materials(poses.length, rgba)
     render_line(transforms, materials, poses.length)
+}
+
+function rline(A, B, width = 0.0045, rgba = [0, 0, 0, 1]) {
+    var poses = sample_line(...A, ...B, _N-1)
+    renderfu(poses, width, rgba)
 }
 
 canvas.addEventListener("pointermove", on_pointermove, {/*passive: true,*/ capture:true})
@@ -277,48 +319,74 @@ document.addEventListener('touchend', (e) => {e.preventDefault()})
 // gl.deleteBuffer(uniformMaterialBuffer);
 // gl.deleteProgram(program);
 
+const pi = 3.141592
 
-// var tcx = canvas.width/3
-// var tcy = canvas.height/3
-
-var tcx = -0.10
-var tcy = -0.10
-
-// var tr = canvas.width/5
-// var testx = tcx + cos( 0) * tr
-// var testy = tcy + sin( 0) * tr
+var tcx = canvas.width/10
+var tcy = canvas.height/10
+// var tcx = 200
+// var tcy = 200
+var tr = 20
+var i = 0
+var n = 10
+var testx = tcx + cos(2*pi*i/n) * tr
+var testy = tcy + sin(2*pi*i/n) * tr
 // on_pointerdown({offsetX: testx , offsetY:testy , preventDefault:()=>{}})
-// for (let i = 1; i< 100; i++) {
-//     testx = tcx + cos( i*0.0010) * tr
-//     testy = tcy + sin( i*0.0010) * tr
-//     on_pointermove({offsetX: testx, offsetY: testy, preventDefault:()=>{}})
+on_pointerdown({offsetX: tcx, offsetY:tcy, preventDefault:()=>{}})
+for (let i = 1; i<= n; i++) {
+    log(i, n)
+    testx = tcx + cos(2*pi* i/n) * tr
+    testy = tcy + sin(2*pi* i/n) * tr
+    on_pointermove({offsetX: testx, offsetY: testy, preventDefault:()=>{}})
+}
+on_pointerup(  {offsetX: tcx, offsetY:tcy, preventDefault:()=>{}})
+
+// let L = [-1.0, 0.8]
+
+
+function test1() {
+let Ps = [
+[-1.8, 1.8],
+[-0.6, 0.6],
+[-0.4, 0.8],
+[-0.6, 1.0],
+]
+
+// let Ps = []
+// let tcx = -0.5
+// let tcy = -0.0
+// let n = 10
+// let tr = 0.5
+// for (let i = 1.0; i< n; i++) {
+//     let x = tcx + cos(2*3.14* (i/n)) * tr
+//     let y = tcy + sin(2*3.14* (i/n)) * tr
+//     Ps.push([x, y])
 // }
-// on_pointerup(  {offsetX: testx + 10.04, offsetY:testy + 10.04, preventDefault:()=>{}})
 
-let L = [-0.8, 0.8]
-let A = [-0.6, 0.6]
-let B = [-0.4, 0.8]
-let N = [-0.6, 1.0]
-let poses = sample_line(...L, ...A, _N-1)
-renderfu(poses)
+    let L = Ps[0]
+    let A = Ps[1]
+    let B = Ps[2]
+    let N = Ps[3]
 
-rline(L, A)
-rline(A, B)
-rline(B, N)
+    let poses = sample_line(...L, ...A, _N-1)
+    renderfu(poses)
 
-const [Ta_, Ta]  = tangentenpunkte(...L, ...A, ...B)
-const [Tb_, Tb]  = tangentenpunkte(...A, ...B, ...N)
+    rline(L, A)
+    rline(A, B)
+    rline(B, N)
 
-rline(Ta_, A)
-rline(Ta,  A)
+    let c = dist(...A, ...B)
+    // let c = d
+    // log(A, B, c)
+    const [Ta_, Ta]  = tangentenpunkte(...L, ...A, ...B, c)
+    const [Tb_, Tb]  = tangentenpunkte(...A, ...B, ...N, c)
 
-rline(Tb_, B)
-rline(Tb,  B)
+    rline(Ta_, A, green)
+    rline(Ta,  A, green)
 
-function rline(A, B) {
-    var poses = sample_line(...A, ...B, _N-1)
+    rline(Tb,  B, green)
+    rline(Tb_, B, green)
+
+    poses = sample_bezier(...A, ...Ta, ...Tb_, ...B, _N-1)
     renderfu(poses)
 }
-
-poses = sample_bezier(...A, ...Ta, ...Tb_, ...B, _N-1)
-renderfu(poses)
+// test1()
