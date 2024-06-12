@@ -240,7 +240,7 @@ function on_pointermove(e) {
     drawing.push(p)
 
     if (drawing.length >= 4) {
-        log('on_pointermove bez', drawing.length)
+//         log('on_pointermove bez', drawing.length)
 
         /// L -- A -- B -- N
 
@@ -279,29 +279,29 @@ function on_pointermove(e) {
 
         let poses = sample_bezier(...A, ...Ta, ...Tb_, ...B, _N-1)
 //         let poses = sample_line(...A, ...B, _N-1)
-        renderfu(poses, 0.004)
+        renderfu(poses)
 
-        rline(Ta, A, green)
+//         rline(Ta, A, green)
 //         rline(Ta_,A, green)
     } 
     else{
         /// fuck this makes teh first line twice
-//         log('on_pointermove lin', drawing.length)
-//         const poses = sample_line(...lastp, ...p, _N-1)
-//         renderfu(poses, rgb)
+        log('on_pointermove lin', drawing.length)
+        const poses = sample_line(...lastp, ...p, _N-1)
+        renderfu(poses, red)
     }
 
 }
 
-function renderfu(poses, width = 0.0045, rgba = [0, 0, 0, 1]) {
+function renderfu(poses, rgba = [0, 0, 0, 1], width = 0.0055) {
     let transforms = make_Ms(poses, width)
     let materials = make_materials(poses.length, rgba)
     render_line(transforms, materials, poses.length)
 }
 
-function rline(A, B, width = 0.0045, rgba = [0, 0, 0, 1]) {
+function rline(A, B, rgba = [0, 0, 0, 1], width = 0.0055) {
     var poses = sample_line(...A, ...B, _N-1)
-    renderfu(poses, width, rgba)
+    renderfu(poses, rgba, width)
 }
 
 canvas.addEventListener("pointermove", on_pointermove, {/*passive: true,*/ capture:true})
